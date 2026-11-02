@@ -98,10 +98,10 @@ sudo sysctl -w net.netfilter.nf_conntrack_max=2097152
 sudo sysctl -w net.netfilter.nf_conntrack_buckets=524288
 ```
 
-Add source addresses once per boot:
+Add source addresses once per boot (32 source IPs for 1M connections, 31.25k ports per IP):
 
 ```sh
-for i in $(seq 2 17); do
+for i in $(seq 2 33); do
   sudo ip addr add 127.0.0.$i/8 dev lo
 done
 ```
