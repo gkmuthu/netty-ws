@@ -1,0 +1,31 @@
+# Smoke run. This is not the 1M test. See README-1M.md.
+services:
+  ws:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      WS_HOST: 0.0.0.0
+      WS_PORT: "8080"
+      WS_WORKERS: "2"
+      WS_MAX_CONNECTIONS: "100000"
+      WS_IDLE_SECONDS: "120"
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx4g -XX:MaxDirectMemorySize=1g -XX:+ExitOnOutOfMemoryError"
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576
+  client:
+    build:
+      context: ./rust-client
+    depends_on:
+      - ws
+    command: ["--target=ws://ws:8080/ws", "--connections=2000", "--ramp-per-second=100", "--initial-delay=3", "--ping-seconds=20", "--hold-seconds=0", "--message-bytes=8", "--metrics-port=9100"]
+    ports:
+      - "9100:9100"
+    ulimits:
+      nofile:
+        soft: 1048576
+        hard: 1048576

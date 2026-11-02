@@ -1,0 +1,8 @@
+target
+rust-client
+.git
+.idea
+.vscode
+.env
+*.iml
+.DS_Store

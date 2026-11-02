@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Client</title>
+</head>
+<body>
+<p id="status" role="status">Not connected.</p>
+<button id="connect" type="button">Connect</button>
+<form id="messageForm">
+    <label>Message <input id="message" type="text" name="message" value="hello" maxlength="4096"/></label>
+    <br/><br/>
+    <button id="send" type="submit" disabled>Send Message</button>
+    <hr color="red"/>
+    <h3>Server Response</h3>
+    <textarea id="responseContent" aria-label="Server response" readonly style="width:95%; height:300px;"></textarea>
+</form>
+<script>
+    const status = document.getElementById("status");
+    const connectButton = document.getElementById("connect");
+    const sendButton = document.getElementById("send");
+    const response = document.getElementById("responseContent");
+    let socket;
+    let heartbeat;
+    let connectionError = false;
+
+    function connect() {
+        if (location.protocol !== "http:" && location.protocol !== "https:") {
+            status.textContent = "Do not open this file directly. Start the server and open "
+                + "http://127.0.0.1:9090/sample-connector.html instead.";
+            return;
+        }
+        const url = new URL("/ws", location.href);
+        url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
+        status.textContent = "Connecting to " + url.href;
+        connectButton.disabled = true;
+        connectionError = false;
+        socket = new WebSocket(url.href);
+        socket.onopen = () => {
+            status.textContent = "Connected to " + url.href;
+            sendButton.disabled = false;
+            heartbeat = setInterval(() => {
+                if (socket.readyState === WebSocket.OPEN) {
+                    socket.send("__heartbeat__");
+                }
+            }, 20000);
+        };
+        socket.onmessage = event => {
+            if (event.data !== "__heartbeat__") {
+                response.value = (response.value + event.data + "\n").slice(-16384);
+            }
+        };
+        socket.onerror = () => {
+            connectionError = true;
+            status.textContent = "Connection failed. Check that the server is running and "
+                + "WS_ALLOWED_ORIGINS includes " + location.origin
+                + ". See browser Console/Network for the handshake error.";
+        };
+        socket.onclose = event => {
+            clearInterval(heartbeat);
+            sendButton.disabled = true;
+            connectButton.disabled = false;
+            if (!connectionError) {
+                status.textContent = "Connection closed (code " + event.code + ")"
+                    + (event.reason ? ": " + event.reason : ". Click Connect to retry.");
+            }
+        };
+    }
+
+    connectButton.addEventListener("click", connect);
+    document.getElementById("messageForm").addEventListener("submit", event => {
+        event.preventDefault();
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(document.getElementById("message").value);
+        } else {
+            status.textContent = "Not connected. Click Connect to retry.";
+        }
+    });
+    connect();
+</script>
+</body>
+</html>

@@ -1,4 +1,15 @@
 # Compiled class file
+/target/
+/rust-client/target/
+/logs/
+/.vscode/
+/.idea/
+*.iml
+.DS_Store
+
+.vscode
+.idea
+
 *.class
 
 # Log file

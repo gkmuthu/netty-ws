@@ -1,0 +1,20 @@
+[package]
+name = "ws-load-client"
+version = "0.1.0"
+edition = "2021"
+description = "JVM-free WebSocket load client used by the Docker client services"
+publish = false
+
+[[bin]]
+name = "ws-load-client"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"
+
